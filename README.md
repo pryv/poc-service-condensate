@@ -1,4 +1,4 @@
-# Mockup to test condesates  of event GET requests
+# Mockup to test condensates of events GET requests
 
 To be installed allongside core
 
@@ -10,6 +10,21 @@ To be installed allongside core
 
 - Add a config file
 
+## Setup
+
+`$ npm install`
+
+
+## Run
+
+**in production in a core deployement** `$ npm start`
+
+URL to call will be: `https://{user}.pryv.me/xevents/?format=csv+head&fields[]=time&fields[]=type&fields[]=content&auth={token}`
+
+**Development run** for local usage `$ npm run dev`
+
+URL to call will be: `http://localhost:8080/{user}.pryv.me/events/?format=csv+head&fields[]=time&fields[]=type&fields[]=content&auth={token}`
+
 
 ## Parmeters in the query
 
@@ -17,7 +32,7 @@ To be installed allongside core
 - *format*: one of `json`, `csv`, `jsonMap` `html` add `+head` to get table headers
 
 
-Exemple `https://{user}.pryv.me/xevents/?format=csv+head&fields[]=time&fields[]=type&fields[]=content&auth={token}`
+Exemple
 
 
 ## Exemples

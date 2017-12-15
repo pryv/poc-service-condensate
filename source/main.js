@@ -5,14 +5,29 @@ var querystring = require('querystring');
 
 // ---- settings ---- //
 
-var destHttp = require('https');
+
+
 
 var config = {
-  'listeningPort' : 8080,
-  'destination' : 'perki.pryv.me',
-  'destinationPort': 443,
-  'defaultFormat': 'html'
+  listeningPort : 9000,
+  destination : 'core',
+  destinationPort: 9000,
+  destHttp: 'http',
+  defaultFormat: 'html'
 };
+
+if (process.argv[2] === 'dev') {
+  config = {
+    listeningPort : 8080,
+    destination : false,
+    destinationPort: 443,
+    destHttp: 'https',
+    defaultFormat: 'html'
+  };
+}
+
+var destHttp = require(config.destHttp);
+
 
 // -- internal -- //
 
@@ -55,16 +70,11 @@ var formats = {
 
 
 // -- launching server -- //
-
-
 http.createServer(onRequest).listen(config.listeningPort);
 
 function onRequest(client_req, client_res) {
 
   var query = querystring.parse(client_req.url.substring(client_req.url.indexOf('?') + 1));
-
-
-
 
   var options = {
     hostname: config.destination,
@@ -73,8 +83,23 @@ function onRequest(client_req, client_res) {
     method: 'GET'
   };
 
-  var req = destHttp.request(options, function (res) {
+  // id dev mode
 
+  if (! config.destination) {
+    var i = client_req.url.indexOf('/', 1);
+    options.hostname = client_req.url.substring(1, i);
+    options.path = client_req.url.substring(i);
+  }
+
+
+  // escape favicon
+  if (options.path === '/favicon.ico') {
+    client_res.writeHead(404);
+    client_res.end('');
+    return;
+  }
+
+  var req = destHttp.request(options, function (res) {
 
     var properties = query[onlyPopertiesKey];
 
@@ -119,7 +144,7 @@ function onRequest(client_req, client_res) {
             this.queue(settings.block[2] + settings.block[0]);
           }
 
-          for (var i = 0, len = properties.length; i < len; i++) {
+          for (var i = 0, len2 = properties.length; i < len2; i++) {
             this.queue((i > 0 ? settings.separator : '') +
               JSON.stringify((event[properties[i]] || null)));
           }
@@ -133,7 +158,6 @@ function onRequest(client_req, client_res) {
       );
 
 
-
       res.pipe(JSONStream.parse('events.*')).pipe(transformer).pipe(client_res);
 
 
@@ -141,14 +165,18 @@ function onRequest(client_req, client_res) {
       client_res.writeHead(res.statusCode, res.headers);
       res.pipe(client_res);
     }
+  });
 
-
+  req.on('error', function (error) {
+    console.log(error);
+    client_res.writeHead(500);
+    client_res.end('Internal error');
   });
 
   client_req.pipe(req);
 
 }
 
-console.log('started');
+console.log('started with config', config);
 
 
