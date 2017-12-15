@@ -1,57 +1,133 @@
-
+var JSONStream = require('JSONStream');
+var through = require('through');
 var http = require('http');
 var querystring = require('querystring');
 
-var JSONStream = require('JSONStream');
-var through = require('through');
+// ---- settings ---- //
 
 var destHttp = require('https');
 
 var config = {
   'listeningPort' : 8080,
   'destination' : 'perki.pryv.me',
-  'destinationPort': 443
+  'destinationPort': 443,
+  'defaultFormat': 'html'
 };
 
-// the querystring parmater with the filter
+// -- internal -- //
+
+// the querystring parameter with the filter
 var onlyPopertiesKey = 'fields[]';
+
+
+var formats = {
+  html : {
+    separator : '</td><td>',
+    headers: false,
+    contentType: 'text/html',
+    wrapping: ['<html><body><table border=1>', '</table></body></html>'],  // header and trailer
+    block: ['<tr><td>', '</td></tr>', '\n']  // header, trailer and separator of each block (event)
+  },
+  csv : {
+    separator : ';',
+    headers: false,
+    contentType: 'text/csv',
+    wrapping: ['', ''],  // header and trailer of the all document
+    block: ['', '', '\n']  // header, trailer and separator of each block (event)
+  },
+  json : {
+    separator : ',',
+    headers: false,
+    contentType: 'application/json',
+    wrapping: ['[', ']'],  // header and trailer of the all document
+    block: ['', '', ',']  // header, trailer and separator of each block (event)
+  },
+  jsonMap : {
+    separator : ',',
+    headers: false,
+    contentType: 'application/json',
+    wrapping: ['[', ']'],  // header and trailer of the all document
+    block: ['[',']', ',']  // header, trailer and separator of each block (event)
+  }
+};
+
+
+
+
+// -- launching server -- //
 
 
 http.createServer(onRequest).listen(config.listeningPort);
 
 function onRequest(client_req, client_res) {
 
-  var query = querystring.parse(client_req.url.substring(client_req.url.indexOf('?')+1));
+  var query = querystring.parse(client_req.url.substring(client_req.url.indexOf('?') + 1));
+
+
+
 
   var options = {
     hostname: config.destination,
     port: config.destinationPort,
     path: '/' + client_req.url.substr(2),
     method: 'GET'
-
   };
 
   var req = destHttp.request(options, function (res) {
-    client_res.writeHead(res.statusCode, res.headers);
+
 
     var properties = query[onlyPopertiesKey];
 
     if (res.statusCode === 200 &&
-      res.headers['content-type'] === 'application/json' &&
-      properties)  {
+      res.headers['content-type'] === 'application/json' && properties) {
+
+
+      var settings = formats[config.defaultFormat];
+      if (query.format) {
+        var sformat = query.format.split(' ');
+        if (formats[sformat[0]]) {
+          settings = formats[sformat[0]];
+
+        }
+
+        if (sformat[1] === 'head') {
+          settings.headers = true;
+        }
+      }
+
+
+      res.headers['content-type'] = settings.contentType; // override headers
+      client_res.writeHead(res.statusCode, res.headers);
 
       var first = true;
-      var separator = '[';
       var transformer = through(
         function write(event) {
-          for (var i = 0, len = properties.length; i < len; i++) {
-            this.queue(separator + JSON.stringify((event[properties[i]] || null)));
-            if (first) { first = false; separator = ','; }
+          if (first) {  // head wrapping
+            this.queue(settings.wrapping[0]);
+            first = false;
+
+            if (settings.headers) {
+              this.queue(settings.block[0]);
+              for (var j = 0, len = properties.length; j < len; j++) {
+                this.queue((j > 0 ? settings.separator : '') + '"' + properties[j] + '"');
+              }
+              this.queue(settings.block[1] + settings.block[2]);
+            }
+
+            this.queue(settings.block[0]);
+          } else {
+            this.queue(settings.block[2] + settings.block[0]);
           }
+
+          for (var i = 0, len = properties.length; i < len; i++) {
+            this.queue((i > 0 ? settings.separator : '') +
+              JSON.stringify((event[properties[i]] || null)));
+          }
+          this.queue(settings.block[1]);
         },
         function end() {
-          if (first){ this.queue('['); }
-          this.queue(']');
+          if (first) { this.queue(settings.wrapping[0]); } // head wrapping
+          this.queue(settings.wrapping[1]);
           this.queue(null);
         }
       );
@@ -62,6 +138,7 @@ function onRequest(client_req, client_res) {
 
 
     } else { // just pipe result
+      client_res.writeHead(res.statusCode, res.headers);
       res.pipe(client_res);
     }
 
