@@ -1,14 +1,4 @@
-# Mockup to test condensates of events GET requests
-
-To be installed allongside core
-
-/xevents are redirected to this service
-
-
-
-### Todo
-
-- Add a config file
+# Mockup to for condensates of events GET requests
 
 ## Setup
 
@@ -17,7 +7,7 @@ To be installed allongside core
 
 ## Run
 
-**in production in a core deployement** `$ npm start`
+**in production alongside core deployement** `$ npm start`
 
 URL to call will be: `https://{user}.pryv.me/xevents/?format=csv+head&fields[]=time&fields[]=type&fields[]=content&auth={token}`
 
