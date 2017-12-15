@@ -102,6 +102,8 @@ function onRequest(client_req, client_res) {
   var req = destHttp.request(options, function (res) {
 
     var properties = query[onlyPopertiesKey];
+    if (! Array.isArray(properties)) { properties = [properties]; }
+
 
     if (res.statusCode === 200 &&
       res.headers['content-type'] === 'application/json' && properties) {
