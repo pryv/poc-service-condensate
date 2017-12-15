@@ -1,4 +1,4 @@
-# Mockup to for condensates of events GET requests
+# Mockup service for future condenses feature on events GET requests
 
 ## Setup
 
@@ -7,7 +7,7 @@
 
 ## Run
 
-**in production alongside core deployement** `$ npm start`
+**in production alongside core deployment** `$ npm start`
 
 URL to call will be: `https://{user}.pryv.me/xevents/?format=csv+head&fields[]=time&fields[]=type&fields[]=content&auth={token}`
 
@@ -16,9 +16,9 @@ URL to call will be: `https://{user}.pryv.me/xevents/?format=csv+head&fields[]=t
 URL to call will be: `http://localhost:8080/{user}.pryv.me/events/?format=csv+head&fields[]=time&fields[]=type&fields[]=content&auth={token}`
 
 
-## Parmeters in the query
+## Parameters in the query
 
-- *fields[]*: select wich fields of events to display, add as many `fields[]=...`  as needed
+- *fields[]*: select which fields of events to display, add as many `fields[]=...`  as needed
 - *format*: one of `json`, `csv`, `jsonMap` `html` add `+head` to get table headers
 
 
