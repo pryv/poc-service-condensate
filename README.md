@@ -9,7 +9,8 @@
 
 **in production alongside core deployment** `$ yarn start`
 
-URL to call will be: `https://{user}.pryv.me/xevents/?format=csv+head&fields[]=time&fields[]=type&fields[]=content&auth={token}`
+URL to call will be: `https://{user}.pryv.me/xevents?format=csv+head&fields[]=time&fields[]=type&fields[]=content&auth={token}`
+
 
 **Development run** for local usage `$ yarn run dev`
 
