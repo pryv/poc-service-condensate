@@ -55,7 +55,7 @@ function onRequest(client_req, client_res) {
   const username = client_req.headers.host.split('.')[0];
 
   const path = client_req.url.substring(0,client_req.url.indexOf('?'));
-  let resource = path.split('/')[2];
+  let resource = path.split('/')[1];
 
   const printPath = username + path;
 
@@ -69,13 +69,12 @@ function onRequest(client_req, client_res) {
   // id dev mode
 
   if (! config.get('pryv:hostname')) {
-    let i = client_req.url.indexOf('/', 1);
-    options.hostname = client_req.url.substring(1, i);
-    options.path = client_req.url.substring(i);
+    let secondSlash = client_req.url.indexOf('/', 1);
+    options.hostname = client_req.url.substring(1, secondSlash);
+    options.path = client_req.url.substring(secondSlash);
     resource = path.split('/')[2];
   }
 
-  console.log('res', resource);
 
   // escape favicon
   if (options.path === '/favicon.ico') {
@@ -103,7 +102,7 @@ function onRequest(client_req, client_res) {
         }
 
         if (formatParam[1] === 'head') {
-          settings.headers = true;
+          settings.includeFieldNames = true;
         }
       }
 
@@ -112,12 +111,12 @@ function onRequest(client_req, client_res) {
 
       let first = true;
       let transformer = through(
-        function write(event) {
+        function write(apiObject) {
           if (first) {  // head wrapping
             this.queue(settings.wrapping[0]);
             first = false;
 
-            if (settings.headers) {
+            if (settings.includeFieldNames) {
               this.queue(settings.block[0]);
               for (let j = 0, len = properties.length; j < len; j++) {
                 this.queue((j > 0 ? settings.separator : '') + '"' + properties[j] + '"');
@@ -132,7 +131,7 @@ function onRequest(client_req, client_res) {
 
           for (let i = 0, len2 = properties.length; i < len2; i++) {
             this.queue((i > 0 ? settings.separator : '') +
-              JSON.stringify((event[properties[i]] || null)));
+              JSON.stringify((apiObject[properties[i]] || null)));
           }
           this.queue(settings.block[1]);
         },
@@ -143,7 +142,6 @@ function onRequest(client_req, client_res) {
           console.log(new Date() + ' - ' + printPath + ' - ' + (new Date().getTime() - startRequestTimestamp) + ' ms');
         }
       );
-
 
       res.pipe(JSONStream.parse(resource + '.*')).pipe(transformer).pipe(client_res);
 
