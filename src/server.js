@@ -51,12 +51,15 @@ http.createServer(onRequest).listen(config.get('server:port'));
 
 function onRequest(client_req, client_res) {
 
-  let query = querystring.parse(client_req.url.substring(client_req.url.indexOf('?') + 1));
+  const query = querystring.parse(client_req.url.substring(client_req.url.indexOf('?') + 1));
+  const username = client_req.headers.host.split('.')[0];
+
+  const printPath = username + client_req.url.substring(0,client_req.url.indexOf('?'));
 
   let options = {
     hostname: config.get('pryv:hostname'),
     port: config.get('pryv:port'),
-    path: '/' + client_req.url.substr(2),
+    path: '/' + username + '/' + client_req.url.substr(2),
     method: 'GET'
   };
 
@@ -77,6 +80,8 @@ function onRequest(client_req, client_res) {
   }
 
   let req = destHttp.request(options, function (res) {
+
+    const startRequestTimestamp = new Date().getTime();
 
     let properties = query[onlyPropertiesKey];
     if (! Array.isArray(properties)) { properties = [properties]; }
@@ -133,6 +138,7 @@ function onRequest(client_req, client_res) {
           if (first) { this.queue(settings.wrapping[0]); } // head wrapping
           this.queue(settings.wrapping[1]);
           this.queue(null);
+          console.log(new Date() + ' - ' + printPath + ' - ' + (new Date().getTime() - startRequestTimestamp) + ' ms');
         }
       );
 
@@ -153,7 +159,6 @@ function onRequest(client_req, client_res) {
   });
 
   client_req.pipe(req);
-
 }
 
 console.log('started with config', config.get());
