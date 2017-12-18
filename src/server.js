@@ -2,28 +2,8 @@ const JSONStream = require('JSONStream');
 const through = require('through');
 const http = require('http');
 const querystring = require('querystring');
-
-// ---- settings ---- //
-
-let config = {
-  listeningPort : 9000,
-  destination : 'core',
-  destinationPort: 9000,
-  destHttp: 'http',
-  defaultFormat: 'html'
-};
-
-if (process.argv[2] === 'dev') {
-  config = {
-    listeningPort : 8080,
-    destination : false,
-    destinationPort: 443,
-    destHttp: 'https',
-    defaultFormat: 'html'
-  };
-}
-
-const destHttp = require(config.destHttp);
+const config = require('./config');
+const destHttp = require(config.get('pryv:http'));
 
 
 // -- internal -- //
@@ -67,22 +47,22 @@ let formats = {
 
 
 // -- launching server -- //
-http.createServer(onRequest).listen(config.listeningPort);
+http.createServer(onRequest).listen(config.get('server:port'));
 
 function onRequest(client_req, client_res) {
 
   let query = querystring.parse(client_req.url.substring(client_req.url.indexOf('?') + 1));
 
   let options = {
-    hostname: config.destination,
-    port: config.destinationPort,
+    hostname: config.get('pryv:hostname'),
+    port: config.get('pryv:port'),
     path: '/' + client_req.url.substr(2),
     method: 'GET'
   };
 
   // id dev mode
 
-  if (! config.destination) {
+  if (! config.get('pryv:hostname')) {
     let i = client_req.url.indexOf('/', 1);
     options.hostname = client_req.url.substring(1, i);
     options.path = client_req.url.substring(i);
@@ -106,7 +86,7 @@ function onRequest(client_req, client_res) {
       res.headers['content-type'] === 'application/json' && properties) {
 
 
-      let settings = formats[config.defaultFormat];
+      let settings = formats[config.get('service:defaultFormat')];
       if (query.format) {
         let sformat = query.format.split(' ');
         if (formats[sformat[0]]) {
@@ -176,6 +156,6 @@ function onRequest(client_req, client_res) {
 
 }
 
-console.log('started with config', config);
+console.log('started with config', config.get());
 
 
