@@ -25,8 +25,8 @@ PYTHON=$(which python2.7) run yarn install
 run apt-get update
 run apt-get --yes --force-yes install zip
 
-# Perform a release build of the source code. (-> lib)
-run yarn run release
+# Perform a release build of the source code. (ignore devDependencies)
+run yarn install --production
 
 # Install the config file
 run mkdir -p $conf_dir && \
