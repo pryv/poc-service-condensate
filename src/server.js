@@ -75,6 +75,8 @@ function onRequest(client_req, client_res) {
     resource = path.split('/')[2];
   }
 
+  // remove 'x' in front of resource name
+  resource = resource.substring(1);
 
   // escape favicon
   if (options.path === '/favicon.ico') {
