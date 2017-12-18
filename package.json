@@ -4,8 +4,10 @@
   "description": "Mockup Proxy to condensate events",
   "version": "0.0.1",
   "homepage": "http://w.pryv.com",
+  "private": true,
+  "license": "UNLICENSED",
   "engines": {
-    "node": "~6.10.0"
+    "node": "^8.0.0"
   },
   "dependencies": {
     "JSONStream": "^1.3.1",

@@ -1,14 +1,11 @@
-var JSONStream = require('JSONStream');
-var through = require('through');
-var http = require('http');
-var querystring = require('querystring');
+const JSONStream = require('JSONStream');
+const through = require('through');
+const http = require('http');
+const querystring = require('querystring');
 
 // ---- settings ---- //
 
-
-
-
-var config = {
+let config = {
   listeningPort : 9000,
   destination : 'core',
   destinationPort: 9000,
@@ -26,16 +23,16 @@ if (process.argv[2] === 'dev') {
   };
 }
 
-var destHttp = require(config.destHttp);
+const destHttp = require(config.destHttp);
 
 
 // -- internal -- //
 
 // the querystring parameter with the filter
-var onlyPopertiesKey = 'fields[]';
+let onlyPropertiesKey = 'fields[]';
 
 
-var formats = {
+let formats = {
   html : {
     separator : '</td><td>',
     headers: false,
@@ -74,9 +71,9 @@ http.createServer(onRequest).listen(config.listeningPort);
 
 function onRequest(client_req, client_res) {
 
-  var query = querystring.parse(client_req.url.substring(client_req.url.indexOf('?') + 1));
+  let query = querystring.parse(client_req.url.substring(client_req.url.indexOf('?') + 1));
 
-  var options = {
+  let options = {
     hostname: config.destination,
     port: config.destinationPort,
     path: '/' + client_req.url.substr(2),
@@ -86,7 +83,7 @@ function onRequest(client_req, client_res) {
   // id dev mode
 
   if (! config.destination) {
-    var i = client_req.url.indexOf('/', 1);
+    let i = client_req.url.indexOf('/', 1);
     options.hostname = client_req.url.substring(1, i);
     options.path = client_req.url.substring(i);
   }
@@ -99,9 +96,9 @@ function onRequest(client_req, client_res) {
     return;
   }
 
-  var req = destHttp.request(options, function (res) {
+  let req = destHttp.request(options, function (res) {
 
-    var properties = query[onlyPopertiesKey];
+    let properties = query[onlyPropertiesKey];
     if (! Array.isArray(properties)) { properties = [properties]; }
 
 
@@ -109,9 +106,9 @@ function onRequest(client_req, client_res) {
       res.headers['content-type'] === 'application/json' && properties) {
 
 
-      var settings = formats[config.defaultFormat];
+      let settings = formats[config.defaultFormat];
       if (query.format) {
-        var sformat = query.format.split(' ');
+        let sformat = query.format.split(' ');
         if (formats[sformat[0]]) {
           settings = formats[sformat[0]];
 
@@ -126,8 +123,8 @@ function onRequest(client_req, client_res) {
       res.headers['content-type'] = settings.contentType; // override headers
       client_res.writeHead(res.statusCode, res.headers);
 
-      var first = true;
-      var transformer = through(
+      let first = true;
+      let transformer = through(
         function write(event) {
           if (first) {  // head wrapping
             this.queue(settings.wrapping[0]);
@@ -135,7 +132,7 @@ function onRequest(client_req, client_res) {
 
             if (settings.headers) {
               this.queue(settings.block[0]);
-              for (var j = 0, len = properties.length; j < len; j++) {
+              for (let j = 0, len = properties.length; j < len; j++) {
                 this.queue((j > 0 ? settings.separator : '') + '"' + properties[j] + '"');
               }
               this.queue(settings.block[1] + settings.block[2]);
@@ -146,7 +143,7 @@ function onRequest(client_req, client_res) {
             this.queue(settings.block[2] + settings.block[0]);
           }
 
-          for (var i = 0, len2 = properties.length; i < len2; i++) {
+          for (let i = 0, len2 = properties.length; i < len2; i++) {
             this.queue((i > 0 ? settings.separator : '') +
               JSON.stringify((event[properties[i]] || null)));
           }

@@ -2,16 +2,16 @@
 
 ## Setup
 
-`$ npm install`
+`$ yarn install`
 
 
 ## Run
 
-**in production alongside core deployment** `$ npm start`
+**in production alongside core deployment** `$ yarn start`
 
 URL to call will be: `https://{user}.pryv.me/xevents/?format=csv+head&fields[]=time&fields[]=type&fields[]=content&auth={token}`
 
-**Development run** for local usage `$ npm run dev`
+**Development run** for local usage `$ yarn run dev`
 
 URL to call will be: `http://localhost:8080/{user}.pryv.me/events/?format=csv+head&fields[]=time&fields[]=type&fields[]=content&auth={token}`
 
