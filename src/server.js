@@ -9,10 +9,10 @@ const destHttp = require(config.get('pryv:http'));
 // -- internal -- //
 
 // the querystring parameter with the filter
-let onlyPropertiesKey = 'fields[]';
+let FIELDS_PROPERTY_NAME = 'fields[]';
 
 
-let formats = {
+let supportedFormats = {
   html : {
     separator : '</td><td>',
     headers: false,
@@ -54,7 +54,10 @@ function onRequest(client_req, client_res) {
   const query = querystring.parse(client_req.url.substring(client_req.url.indexOf('?') + 1));
   const username = client_req.headers.host.split('.')[0];
 
-  const printPath = username + client_req.url.substring(0,client_req.url.indexOf('?'));
+  const path = client_req.url.substring(0,client_req.url.indexOf('?'));
+  let resource = path.split('/')[2];
+
+  const printPath = username + path;
 
   let options = {
     hostname: config.get('pryv:hostname'),
@@ -69,8 +72,10 @@ function onRequest(client_req, client_res) {
     let i = client_req.url.indexOf('/', 1);
     options.hostname = client_req.url.substring(1, i);
     options.path = client_req.url.substring(i);
+    resource = path.split('/')[2];
   }
 
+  console.log('res', resource);
 
   // escape favicon
   if (options.path === '/favicon.ico') {
@@ -83,27 +88,24 @@ function onRequest(client_req, client_res) {
 
     const startRequestTimestamp = new Date().getTime();
 
-    let properties = query[onlyPropertiesKey];
+    let properties = query[FIELDS_PROPERTY_NAME];
     if (! Array.isArray(properties)) { properties = [properties]; }
-
 
     if (res.statusCode === 200 &&
       res.headers['content-type'] === 'application/json' && properties) {
 
-
-      let settings = formats[config.get('service:defaultFormat')];
+      // retrieve format if exists, otherwise use default
+      let settings = Object.create(supportedFormats[config.get('service:defaultFormat')]);
       if (query.format) {
-        let sformat = query.format.split(' ');
-        if (formats[sformat[0]]) {
-          settings = formats[sformat[0]];
-
+        let formatParam = query.format.split(' ');
+        if (supportedFormats[formatParam[0]]) {
+          settings = Object.create(supportedFormats[formatParam[0]]);
         }
 
-        if (sformat[1] === 'head') {
+        if (formatParam[1] === 'head') {
           settings.headers = true;
         }
       }
-
 
       res.headers['content-type'] = settings.contentType; // override headers
       client_res.writeHead(res.statusCode, res.headers);
@@ -143,7 +145,7 @@ function onRequest(client_req, client_res) {
       );
 
 
-      res.pipe(JSONStream.parse('events.*')).pipe(transformer).pipe(client_res);
+      res.pipe(JSONStream.parse(resource + '.*')).pipe(transformer).pipe(client_res);
 
 
     } else { // just pipe result
