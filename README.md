@@ -23,10 +23,8 @@ URL to call will be: `http://localhost:8080/{user}.pryv.me/events/?format=csv+he
 - *format*: one of `json`, `csv`, `jsonMap` `html` add `+head` to get table headers
 
 
-Exemple
 
-
-## Exemples
+## Examples
 
 ### `?format=html+head&fields[]=time&fields[]=type&fields[]=content&limit=3`
 
