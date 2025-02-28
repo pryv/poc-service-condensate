@@ -57,3 +57,7 @@ URL to call will be: `http://localhost:8080/{user}.pryv.me/events/?format=csv+he
 ```
 [[1513331185,"length/m",8],[1513331185,"count/steps",17],[1513331185,"activity/plain",null]]
 ```
+
+## License
+
+[BSD-3-Clause](LICENSE)
